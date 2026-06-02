@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>視覺排版與風格提示語生成器</title>
+  <!-- 載入 Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 載入 Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- 自訂卷軸的簡易樣式 -->
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
+    /* 隱藏 color input 的預設外框以美化外觀 */
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="h-screen bg-[#f1f5f9] text-slate-800 font-sans flex flex-col lg:overflow-hidden">
+  
+  <!-- 頁首 -->
+  <header class="bg-slate-900 text-white shadow-sm py-3 px-4 md:px-6 2xl:px-8 border-b-2 border-blue-500 flex-shrink-0">
+    <div class="max-w-[1920px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+      <div>
+        <h1 class="text-xl font-bold flex items-center gap-2 tracking-tight">
+          <i data-lucide="palette" class="text-blue-400 w-5 h-5"></i>
+          視覺排版 & 風格提示語生成器
+        </h1>
+        <p class="mt-1 text-slate-400 text-xs">
+          專為 nanobanana / Gamma / Tome 等「視覺生成 AI」打造。視覺化預覽，精確定義 Layout 與畫面元素。
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- 工作區：大螢幕左右排版，小螢幕自動轉為上下排版 -->
+  <main class="max-w-[1920px] w-full mx-auto px-4 md:px-6 2xl:px-8 pt-4 pb-4 flex flex-col lg:flex-row gap-4 2xl:gap-6 items-stretch flex-1 min-h-0 overflow-y-auto lg:overflow-visible">
+    
+    <!-- 左側 (或上半部)：四大項目橫向排開 (看板模式) -->
+    <div class="flex-1 min-w-0 w-full overflow-x-auto custom-scrollbar pb-2 lg:h-full h-[450px] flex flex-col">
+      <!-- 加上 lg:min-w-0 與 w-full，讓它在大螢幕時不再鎖死最大寬度 -->
+      <div class="flex flex-row gap-4 2xl:gap-5 min-w-max lg:min-w-0 w-full flex-1 min-h-0 pb-2 items-stretch">
+        
+        <!-- 1. 視覺風格 (直列) -->
+        <!-- 使用 lg:w-auto lg:flex-1 lg:min-w-[200px] 讓欄位變成彈性自適應寬度 -->
+        <section class="w-[220px] lg:w-auto lg:flex-1 lg:min-w-[200px] flex-shrink-0 bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full">
+          <h2 class="text-sm font-bold mb-3 flex items-center gap-1.5 text-slate-800 flex-shrink-0">
+            <i data-lucide="sparkles" class="text-blue-500 w-[16px] h-[16px]"></i> 1. 視覺氛圍
+          </h2>
+          <!-- 內部負責縱向捲動 -->
+          <div id="styles-container" class="flex-1 min-h-0 flex flex-col overflow-y-auto gap-2 pr-1.5 custom-scrollbar">
+            <!-- JS 動態生成 -->
+          </div>
+        </section>
+
+        <!-- 2. 色彩計畫 (直列) -->
+        <section class="w-[220px] lg:w-auto lg:flex-1 lg:min-w-[200px] flex-shrink-0 bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full">
+          <h2 class="text-sm font-bold mb-3 flex items-center gap-1.5 text-slate-800 flex-shrink-0">
+            <i data-lucide="paint-bucket" class="text-blue-500 w-[16px] h-[16px]"></i> 2. 色彩計畫
+          </h2>
+          <div id="colors-container" class="flex-1 min-h-0 flex flex-col overflow-y-auto gap-2 pr-1.5 custom-scrollbar">
+            <!-- JS 動態生成 -->
+          </div>
+          <!-- 自定義顏色控制面板 (選擇自定義時顯示) -->
+          <div id="custom-color-panel" class="hidden flex-col gap-2 mt-3 pt-3 border-t border-slate-100 flex-shrink-0">
+            <!-- JS 動態生成 -->
+          </div>
+        </section>
+
+        <!-- 3. 版面配置 (直列) -->
+        <section class="w-[220px] lg:w-auto lg:flex-1 lg:min-w-[200px] flex-shrink-0 bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full">
+          <h2 class="text-sm font-bold mb-3 flex items-center gap-1.5 text-slate-800 flex-shrink-0">
+            <i data-lucide="layout-template" class="text-blue-500 w-[16px] h-[16px]"></i> 3. 版面佈局
+          </h2>
+          <div id="layouts-container" class="flex-1 min-h-0 flex flex-col overflow-y-auto gap-2 pr-1.5 custom-scrollbar">
+            <!-- JS 動態生成 -->
+          </div>
+        </section>
+
+        <!-- 4. 視覺細節元素 (直列) -->
+        <section class="w-[220px] lg:w-auto lg:flex-1 lg:min-w-[200px] flex-shrink-0 bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full">
+          <h2 class="text-sm font-bold mb-3 flex items-center gap-1.5 text-slate-800 flex-shrink-0">
+            <i data-lucide="layers" class="text-blue-500 w-[16px] h-[16px]"></i> 4. 裝飾元素
+          </h2>
+          <div id="elements-container" class="flex-1 min-h-0 flex flex-col overflow-y-auto gap-2 pr-1.5 custom-scrollbar">
+            <!-- JS 動態生成 -->
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- 右側 (或下半部)：輸出區 -->
+    <!-- 大螢幕時靠右 (lg:w-max)，窄螢幕時掉到下方並自動滿寬 (w-full) -->
+    <div class="w-full lg:w-max flex-shrink-0 flex flex-col sm:flex-row gap-4 2xl:gap-6 lg:h-full h-auto pb-5 lg:pb-0">
+      
+      <!-- Node 1: 即時視覺預覽框 -->
+      <!-- 窄螢幕時固定給予 250px 寬度，大螢幕時套用特定尺寸 -->
+      <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col flex-shrink-0 w-full sm:w-[250px] lg:w-[220px] xl:w-[260px] 2xl:w-[300px] h-[300px] lg:h-full">
+        <h2 class="text-sm font-bold mb-3 flex items-center justify-between text-slate-800 flex-shrink-0">
+          <span class="flex items-center gap-1.5">
+            <i data-lucide="mouse-pointer-click" class="text-blue-500 w-[16px] h-[16px]"></i>
+            即時預覽 (Preview)
+          </span>
+        </h2>
+        
+        <div id="preview-wrapper" class="w-full bg-slate-50 rounded-xl p-3 flex items-center justify-center border-2 border-dashed border-slate-200 flex-1 min-h-[150px]">
+          <!-- JS 動態生成預覽畫面 -->
+        </div>
+        <p id="preview-label" class="text-center text-[11px] text-slate-500 mt-3 leading-tight line-clamp-3 flex-shrink-0"></p>
+      </section>
+
+      <!-- Node 2: Prompt 輸出框 -->
+      <!-- 窄螢幕時自動伸展填滿剩下寬度 (sm:flex-1)，大螢幕時縮窄 15% (lg:w-[300px]...) -->
+      <section class="bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex flex-col border border-slate-800 w-full sm:flex-1 lg:flex-none lg:w-[300px] xl:w-[340px] 2xl:w-[400px] h-[300px] lg:h-full">
+        <div class="bg-slate-950 px-4 py-3 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
+          <span class="text-white font-semibold flex items-center gap-1.5 text-[13px] tracking-wide">
+            <i data-lucide="sparkles" class="text-blue-400 w-3.5 h-3.5"></i> 
+            設計指令
+          </span>
+          <button id="copy-btn" onclick="copyPrompt()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all bg-blue-600 text-white hover:bg-blue-500">
+            <i id="copy-icon" data-lucide="clipboard" class="w-3 h-3"></i>
+            <span id="copy-text">複製</span>
+          </button>
+        </div>
+        <div class="p-4 flex-1 min-h-0 relative overflow-hidden flex flex-col">
+          <div class="absolute top-0 left-0 w-1 h-full bg-blue-500/50"></div>
+          <textarea id="prompt-textarea" readonly class="w-full h-full flex-1 bg-transparent text-slate-300 text-[13px] leading-relaxed resize-none focus:outline-none custom-scrollbar selection:bg-blue-500/30"></textarea>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // === 資料定義 ===
+    const VISUAL_STYLES = [
+      { id: 'qingfu_ci', label: '清福企業識別', desc: '乾淨專業的企業識別風格，以專屬識別紅 (#C7000b) 為主，搭配中性色調。嚴格人物服裝規範：若有護理師需著粉色護士服(#F8C8DC)；行政人員著橘紅色單色襯衫(#FF531A)；照顧服務員著淺粉色Polo衫(#FDDDE6)。', previewTheme: { bg: 'bg-white', text: 'text-[#1e293b]', accent: 'bg-[#C7000b]', card: 'bg-[#f8fafc] rounded-md shadow-sm border border-slate-200 border-t-4 border-t-[#C7000b]' }},
+      { id: 'warm_wood', label: '溫馨木質', desc: '大地色系、圓角、營造家一般的溫暖與安心感', previewTheme: { bg: 'bg-[#fffbeb]', text: 'text-[#92400e]', accent: 'bg-[#fcd34d]', card: 'bg-white rounded-2xl shadow-sm border border-[#fef3c7]' }},
+      { id: 'medical_clean', label: '醫療專業', desc: '藍白冷色調、俐落線條、傳遞信任與衛生專業', previewTheme: { bg: 'bg-[#f0f9ff]', text: 'text-[#0f172a]', accent: 'bg-[#7dd3fc]', card: 'bg-white rounded-md shadow-sm border border-[#e0f2fe]' }},
+      { id: 'vibrant_pop', label: '活力明亮', desc: '高對比亮色系、充滿活力、適合節慶活動花絮', previewTheme: { bg: 'bg-[#ffedd5]', text: 'text-[#9a3412]', accent: 'bg-[#fb923c]', card: 'bg-white rounded-xl shadow-md border-2 border-[#fdba74]' }},
+      { id: 'minimalist', label: '極簡現代', desc: '大量留白、無邊框設計、高對比黑白、優雅高階', previewTheme: { bg: 'bg-white', text: 'text-[#334155]', accent: 'bg-[#94a3b8]', card: 'bg-transparent border-t-2 border-[#f1f5f9]' }},
+      { id: 'art_deco', label: '裝飾藝術', desc: '幾何圖形、奢華金屬質感與對稱性，帶有復古華麗的氛圍', previewTheme: { bg: 'bg-[#1e293b]', text: 'text-[#fef08a]', accent: 'bg-[#fde047]', card: 'bg-[#334155] rounded-none shadow-md border border-[#fde047]/50' }},
+      { id: 'cute_pastel', label: '可愛粉嫩風格', desc: '柔和的粉紅、鵝黃等低飽和色系，給人輕柔、夢幻與療癒的視覺感受', previewTheme: { bg: 'bg-[#fdf4ff]', text: 'text-[#86198f]', accent: 'bg-[#f9a8d4]', card: 'bg-white/80 rounded-3xl shadow-sm border border-[#fbcfe8]' }},
+      { id: 'ink_wash', label: '水墨畫', desc: '黑白灰階為主，強調筆觸的濃淡變化與留白意境，帶有東方禪意', previewTheme: { bg: 'bg-[#f8fafc]', text: 'text-[#334155]', accent: 'bg-[#94a3b8]', card: 'bg-white rounded-sm shadow-sm border-l-4 border-[#94a3b8]' }},
+      { id: 'watercolor', label: '水彩畫', desc: '色彩具透明感與暈染效果，畫面清新自然，充滿手作的溫暖質感', previewTheme: { bg: 'bg-[#f0fdfa]', text: 'text-[#0f766e]', accent: 'bg-[#5eead4]', card: 'bg-white/90 rounded-2xl shadow-sm border border-[#ccfbf1] backdrop-blur-sm' }},
+      { id: 'anime', label: '動漫畫風', desc: '日系動畫風格，色彩鮮豔平塗，光影對比強烈', previewTheme: { bg: 'bg-[#eff6ff]', text: 'text-[#1e3a8a]', accent: 'bg-[#93c5fd]', card: 'bg-white rounded-xl shadow-md border border-[#dbeafe]' }},
+      { id: 'shonen_anime', label: '少年動漫畫風', desc: '充滿張力與動態感，色彩對比強烈且熱血，帶有速度線與特效光影', previewTheme: { bg: 'bg-[#fef2f2]', text: 'text-[#991b1b]', accent: 'bg-[#fca5a5]', card: 'bg-white rounded-lg shadow-lg border-2 border-[#fecdd3] transform -skew-x-2' }},
+      { id: 'cute_comic', label: '漫畫可愛風格', desc: '圓潤可愛的角色設計，帶有網點背景、誇張符號與對話框，輕鬆幽默', previewTheme: { bg: 'bg-[#fdf4ff]', text: 'text-[#86198f]', accent: 'bg-[#f0abfc]', card: 'bg-white rounded-3xl shadow-[4px_4px_0_#f0abfc] border-4 border-[#f0abfc]' }},
+      { id: 'chalkboard', label: '黑板粉筆風格', desc: '深綠底色搭配粉筆質感的線條與文字，適合教學或解說情境', previewTheme: { bg: 'bg-[#14532d]', text: 'text-[#f8fafc]', accent: 'bg-[#cbd5e1]', card: 'bg-[#064e3b] rounded-sm border border-[#86efac]/30 border-dashed' }},
+      { id: 'blind_box', label: '盲盒公仔風', desc: '立體精緻的模型質感、大頭小身比例，帶有亮面烤漆或霧面塑膠玩具感', previewTheme: { bg: 'bg-[#fdf2f8]', text: 'text-[#9d174d]', accent: 'bg-[#f472b6]', card: 'bg-gradient-to-br from-white to-[#fce7f3] rounded-[2rem] shadow-xl border-4 border-white' }},
+      { id: 'hand_drawn_doodle', label: '手繪塗鴉風格', desc: '隨性的不規則線條、不對稱形狀，充滿手作溫度與活潑隨興感', previewTheme: { bg: 'bg-[#fafaf9]', text: 'text-[#44403c]', accent: 'bg-[#a8a29e]', card: 'bg-white shadow-[4px_4px_0px_#a8a29e] border-2 border-[#a8a29e] rounded-bl-2xl rounded-tr-2xl' }},
+      { id: 'corporate_memphis', label: '企業曼菲斯風格', desc: '扁平化設計、誇張人物比例、鮮明對比色塊與幾何圖形點綴，充滿現代科技感', previewTheme: { bg: 'bg-[#e0e7ff]', text: 'text-[#3730a3]', accent: 'bg-[#818cf8]', card: 'bg-[#fef08a] rounded-none shadow-none border-4 border-[#818cf8] translate-x-1 translate-y-1' }},
+      { id: 'whiteboard_marker', label: '白板馬克筆風格', desc: '純白底色搭配藍黑紅馬克筆粗線條，呈現辦公室腦力激盪的速寫感', previewTheme: { bg: 'bg-white', text: 'text-[#0f172a]', accent: 'bg-[#60a5fa]', card: 'bg-transparent border-2 border-[#93c5fd] rounded-md shadow-sm' }},
+      { id: 'data_dashboard', label: '數據儀表板風格', desc: '暗色背景搭配螢光色數據圖表、網格線與發光UI元件，強調科技與數據分析', previewTheme: { bg: 'bg-[#1e293b]', text: 'text-[#7dd3fc]', accent: 'bg-[#38bdf8]', card: 'bg-[#334155] rounded-lg shadow-lg border border-[#7dd3fc]/30' }},
+      { id: 'vintage_newspaper', label: '復古報紙風格', desc: '泛黃紙張背景、密集排版、襯線字體與網點照片，充滿年代感與紀實感', previewTheme: { bg: 'bg-[#fef3c7]', text: 'text-[#78350f]', accent: 'bg-[#d97706]', card: 'bg-[#fde68a] rounded-none border-y-4 border-[#d97706]/50 font-serif' }},
+      { id: 'handwriting', label: '手寫筆跡', desc: '模擬真實鋼筆或鉛筆筆觸，不規則的字距與行距，充滿情感與人情味', previewTheme: { bg: 'bg-[#faf8f5]', text: 'text-[#52525b]', accent: 'bg-[#a1a1aa]', card: 'bg-white rounded-sm shadow-sm border border-[#e4e4e7] rotate-1' }},
+      { id: 'clay_3d', label: '3D黏土風格', desc: '用彩色黏土捏成的物件，帶有指紋紋理、邊緣圓滑且立體光影柔和', previewTheme: { bg: 'bg-[#f0fdfa]', text: 'text-[#0f766e]', accent: 'bg-[#5eead4]', card: 'bg-[#ccfbf1] rounded-3xl shadow-[inset_-4px_-4px_6px_rgba(0,0,0,0.05),4px_4px_10px_rgba(0,0,0,0.05)] border-none' }},
+      { id: 'isometric_miniature', label: '等距視角微縮風格', desc: '45度角俯視的上帝視角，像是在看微縮模型或箱庭遊戲，幾何感強烈', previewTheme: { bg: 'bg-[#f1f5f9]', text: 'text-[#475569]', accent: 'bg-[#94a3b8]', card: 'bg-white rounded-none shadow-[6px_6px_0px_#e2e8f0] border border-[#cbd5e1]' }},
+      { id: 'japanese_fresh', label: '日系清新風格', desc: '低飽和度、過曝的自然採光、空氣感與留白，給人純淨無壓力的日常感', previewTheme: { bg: 'bg-[#f8fafc]', text: 'text-[#64748b]', accent: 'bg-[#cbd5e1]', card: 'bg-white/60 rounded-md shadow-sm border-none backdrop-blur-md' }}
+    ];
+
+    const COLOR_SCHEMES = [
+      { id: 'default', label: '預設 (跟隨畫風)', desc: '依照所選畫風原本的預設色彩', colors: ['#e2e8f0', '#94a3b8', '#475569'] },
+      { id: 'custom', label: '自定義', desc: '由色盤自由選擇 1~6 種顏色', colors: [] },
+      { id: 'monochrome_blue', label: '單色調 (藍)', desc: '深淺不同的藍色系，專業沉穩', colors: ['#eff6ff', '#3b82f6', '#1e3a8a'], previewTheme: { bg: 'bg-[#f0f9ff]', text: 'text-[#0369a1]', accent: 'bg-[#7dd3fc]', card: 'bg-white rounded-xl shadow-sm border border-[#e0f2fe]' }},
+      { id: 'monochrome_red', label: '單色調 (紅)', desc: '深淺不同的紅色系，熱情且充滿活力', colors: ['#fef2f2', '#ef4444', '#7f1d1d'], previewTheme: { bg: 'bg-[#fff1f2]', text: 'text-[#9f1239]', accent: 'bg-[#fda4af]', card: 'bg-white rounded-xl shadow-sm border border-[#ffe4e6]' }},
+      { id: 'monochrome_pink', label: '單色調 (粉紅)', desc: '深淺不同的粉紅色系，溫柔且浪漫', colors: ['#fdf2f8', '#f472b6', '#831843'], previewTheme: { bg: 'bg-[#fdf2f8]', text: 'text-[#831843]', accent: 'bg-[#f9a8d4]', card: 'bg-white rounded-xl shadow-sm border border-[#fce7f3]' }},
+      { id: 'monochrome_green', label: '單色調 (綠)', desc: '深淺不同的綠色系，自然、健康、平靜', colors: ['#f0fdf4', '#22c55e', '#14532d'], previewTheme: { bg: 'bg-[#f0fdf4]', text: 'text-[#14532d]', accent: 'bg-[#86efac]', card: 'bg-white rounded-xl shadow-sm border border-[#dcfce7]' }},
+      { id: 'monochrome_purple', label: '單色調 (紫)', desc: '深淺不同的紫色系，神秘且高貴', colors: ['#faf5ff', '#a855f7', '#581c87'], previewTheme: { bg: 'bg-[#faf5ff]', text: 'text-[#581c87]', accent: 'bg-[#d8b4fe]', card: 'bg-white rounded-xl shadow-sm border border-[#f3e8ff]' }},
+      { id: 'grayscale', label: '黑白灰', desc: '純粹的黑白灰階，極簡、純粹、現代感', colors: ['#f9fafb', '#9ca3af', '#111827'], previewTheme: { bg: 'bg-[#f9fafb]', text: 'text-[#374151]', accent: 'bg-[#9ca3af]', card: 'bg-white rounded-xl shadow-sm border border-[#e5e7eb]' }},
+      { id: 'luxury_gold', label: '奢華金', desc: '金色系搭配深色底，展現奢華、頂級與榮耀感', colors: ['#1c1917', '#eab308', '#fef08a'], previewTheme: { bg: 'bg-[#292524]', text: 'text-[#fef08a]', accent: 'bg-[#fde047]', card: 'bg-[#44403c] rounded-xl shadow-md border border-[#fde047]/40' }},
+      { id: 'tech_silver', label: '科技銀', desc: '銀白與亮灰色調，呈現科技、未來與冰冷質感', colors: ['#0f172a', '#cbd5e1', '#f8fafc'], previewTheme: { bg: 'bg-[#1e293b]', text: 'text-[#f8fafc]', accent: 'bg-[#cbd5e1]', card: 'bg-[#334155] rounded-xl shadow-md border border-[#cbd5e1]/40' }},
+      { id: 'warm_earth', label: '大地暖色', desc: '米黃、棕色與橘色，溫暖親和', colors: ['#fffbeb', '#f59e0b', '#78350f'], previewTheme: { bg: 'bg-[#fffbeb]', text: 'text-[#92400e]', accent: 'bg-[#fcd34d]', card: 'bg-white rounded-xl shadow-sm border border-[#fef08a]' }},
+      { id: 'morandi', label: '莫蘭迪色', desc: '低飽和度的灰階色彩，優雅高級', colors: ['#f8fafc', '#94a3b8', '#475569'], previewTheme: { bg: 'bg-[#f8fafc]', text: 'text-[#334155]', accent: 'bg-[#94a3b8]', card: 'bg-white rounded-xl shadow-sm border border-[#e2e8f0]' }},
+      { id: 'vibrant_contrast', label: '高對比跳色', desc: '亮黃搭配深藍或紫色，吸睛搶眼', colors: ['#fef08a', '#eab308', '#4c1d95'], previewTheme: { bg: 'bg-[#fef9c3]', text: 'text-[#4338ca]', accent: 'bg-[#818cf8]', card: 'bg-white rounded-xl shadow-md border-2 border-[#fde047]' }},
+      { id: 'pastel_spring', label: '春日粉彩', desc: '粉紅、薄荷綠、鵝黃，清新柔和', colors: ['#f472b6', '#6ee7b7', '#fef08a'], previewTheme: { bg: 'bg-[#fdf2f8]', text: 'text-[#9d174d]', accent: 'bg-[#a7f3d0]', card: 'bg-[#fefce8] rounded-xl shadow-sm border border-[#fbcfe8]' }},
+      { id: 'dark_neon', label: '暗黑霓虹', desc: '深黑底色搭配螢光青/紫，科技賽博感', colors: ['#0f172a', '#2dd4bf', '#c084fc'], previewTheme: { bg: 'bg-[#1e293b]', text: 'text-[#ccfbf1]', accent: 'bg-[#5eead4]', card: 'bg-[#334155] rounded-xl shadow-md border border-[#99f6e4]/40' }}
+    ];
+
+    const LAYOUTS = [
+      { id: 'split', label: '左右對稱', desc: '左側大圖搭配右側文字，經典且易讀性高' },
+      { id: 'hero', label: '大圖壓字', desc: '全版背景圖，文字置中覆蓋於半透明遮罩上' },
+      { id: 'grid', label: '網格卡片', desc: '多張小卡片並列，適合呈現多項服務特色' },
+      { id: 'feature', label: '重點強調', desc: '大標題置頂，下方搭配橫向圖文條列' },
+      { id: 'bento', label: '便當盒排版', desc: '大小不一的卡片無縫拼貼(Bento Box)，適合展示多元特點，現代感強' },
+      { id: 'timeline', label: '流程步驟', desc: '以節點串聯的視覺引導，適合說明服務流程或企業發展歷史' }
+    ];
+
+    const VISUAL_ELEMENTS = [
+      { id: 'title_only', label: '畫面僅保留「標題與重點」，不加入細節說明文本' },
+      { id: 'rounded_heavy', label: '全面使用「大圓角」元素，去除銳利邊緣' },
+      { id: 'vector_art', label: '影像採用「無邊框向量插畫」風格' },
+      { id: 'large_typo', label: '超大字體排印，提升長輩閱讀辨識度' },
+      { id: 'glassmorphism', label: '區塊背景使用輕微的「毛玻璃」特效' },
+      { id: 'warm_lighting', label: '使用實體風格的背景照片' },
+      { id: 'icon_centric', label: '使用大量粗線條圖示來取代純文字描述' },
+      { id: 'grainy_texture', label: '加入「粗糙雜訊」紋理，增加藝術手感' },
+      { id: 'mesh_gradient', label: '背景使用流動的「網格漸層」，呈現現代感' },
+      { id: 'floating_3d', label: '點綴懸浮的「3D立體小物件」，增加畫面的空間深度' },
+      { id: 'soft_shadow', label: '所有的卡片套用「柔和發光陰影」' },
+      { id: 'organic_shapes', label: '使用「不規則有機形狀」作為背景色塊' },
+      { id: 'high_contrast', label: '文字與背景採「超高對比度」，符合無障礙(高齡)閱讀標準' },
+      { id: 'bokeh_bg', label: '攝影照片要求「淺景深」，讓主角更加凸顯' }
+    ];
+
+    // === 狀態管理 ===
+    let selectedStyle = VISUAL_STYLES[0];
+    let selectedColor = COLOR_SCHEMES[0];
+    let selectedLayout = LAYOUTS[0];
+    let selectedElements = [VISUAL_ELEMENTS[1].label, VISUAL_ELEMENTS[3].label];
+    
+    // 自定義色彩陣列 (預設3個顏色)
+    let customColors = ['#f43f5e', '#3b82f6', '#eab308'];
+
+    // === 渲染函數 ===
+    function renderStyles() {
+      const container = document.getElementById('styles-container');
+      container.innerHTML = VISUAL_STYLES.map(style => {
+        const isSelected = selectedStyle.id === style.id;
+        return `
+          <button title="${style.desc}" onclick="window.selectStyle('${style.id}')"
+            class="w-full flex-shrink-0 flex items-center justify-start text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-150 ${isSelected ? 'border-blue-500 bg-blue-50 shadow-sm text-blue-700' : 'border-slate-100 bg-slate-50 hover:border-blue-300 text-slate-700'}">
+            <span class="font-medium text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">${style.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderColors() {
+      const container = document.getElementById('colors-container');
+      container.innerHTML = COLOR_SCHEMES.map(colorScheme => {
+        const isSelected = selectedColor.id === colorScheme.id;
+        
+        let displayColors = colorScheme.colors;
+        
+        // 處理預設色彩抓取
+        if (colorScheme.id === 'default') {
+          const theme = selectedStyle.previewTheme;
+          const extract = (str) => {
+            if (str.includes('white')) return '#ffffff';
+            if (str.includes('black')) return '#000000';
+            const match = str.match(/\[(#[0-9a-fA-F]+)\]/);
+            return match ? match[1] : '#cccccc';
+          };
+          displayColors = [extract(theme.bg), extract(theme.accent), extract(theme.text)];
+        }
+        
+        // 處理自定義色彩抓取
+        if (colorScheme.id === 'custom') {
+          displayColors = customColors.slice(0, 3); // 縮圖最多顯示3個顏色
+        }
+
+        const colorDots = displayColors.map(c => `<div class="w-2.5 h-2.5 rounded-full border border-black/10 shadow-sm flex-shrink-0" style="background-color: ${c}"></div>`).join('');
+        return `
+          <button title="${colorScheme.desc}" onclick="window.selectColor('${colorScheme.id}')"
+            class="w-full flex-shrink-0 flex justify-between items-center px-3 py-2.5 rounded-xl border-2 transition-all duration-150 ${isSelected ? 'border-blue-500 bg-blue-50 shadow-sm text-blue-700' : 'border-slate-100 bg-slate-50 hover:border-blue-300 text-slate-700'}">
+            <span class="font-medium text-[13px] truncate pr-2">${colorScheme.label}</span>
+            <div class="flex gap-1 flex-shrink-0">${colorDots}</div>
+          </button>
+        `;
+      }).join('');
+
+      renderCustomColorPanel();
+    }
+
+    // 渲染自定義顏色控制面板
+    function renderCustomColorPanel() {
+      const panel = document.getElementById('custom-color-panel');
+      if (selectedColor.id !== 'custom') {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+        return;
+      }
+      
+      panel.classList.remove('hidden');
+      panel.classList.add('flex');
+
+      let html = `<div class="flex flex-wrap gap-2.5 items-center">`;
+      
+      // 繪製所有的顏色選擇器
+      customColors.forEach((color, index) => {
+        html += `
+          <div class="relative group">
+            <input type="color" value="${color}" onchange="window.updateCustomColor(${index}, this.value)" 
+                   class="w-7 h-7 p-0 border border-slate-200 rounded-full cursor-pointer shadow-sm outline-none ring-2 ring-transparent focus:ring-blue-400">
+            ${customColors.length > 1 ? `
+              <button onclick="window.removeCustomColor(${index})" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600">
+                <i data-lucide="x" class="w-2.5 h-2.5"></i>
+              </button>
+            ` : ''}
+          </div>
+        `;
+      });
+
+      // 新增按鈕 (最多6個)
+      if (customColors.length < 6) {
+        html += `
+          <button onclick="window.addCustomColor()" title="新增顏色" class="w-7 h-7 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors bg-slate-50">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+      }
+      
+      html += `</div>
+               <p class="text-[10px] text-slate-400 mt-1">點擊色塊更改顏色，停留色塊刪除 (1~6色)</p>`;
+      
+      panel.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function renderLayouts() {
+      const container = document.getElementById('layouts-container');
+      container.innerHTML = LAYOUTS.map(layout => {
+        const isSelected = selectedLayout.id === layout.id;
+        return `
+          <button title="${layout.desc}" onclick="window.selectLayout('${layout.id}')"
+            class="w-full flex-shrink-0 flex items-center justify-start text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-150 ${isSelected ? 'border-blue-500 bg-blue-50 shadow-sm text-blue-700' : 'border-slate-100 bg-slate-50 hover:border-blue-300 text-slate-700'}">
+            <span class="font-medium text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">${layout.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderElements() {
+      const container = document.getElementById('elements-container');
+      container.innerHTML = VISUAL_ELEMENTS.map(el => {
+        const isSelected = selectedElements.includes(el.label);
+        const checkboxState = isSelected 
+            ? 'bg-blue-500 text-white border-blue-500' 
+            : 'border-2 border-slate-300 bg-white';
+        const btnState = isSelected 
+            ? 'bg-slate-800 border-slate-800 text-white shadow-sm' 
+            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-slate-100';
+        const iconHtml = isSelected ? `<i data-lucide="check" class="w-3 h-3" stroke-width="3"></i>` : '';
+
+        return `
+          <button onclick="window.toggleElement('${el.label}')"
+            class="w-full flex-shrink-0 flex items-start gap-2.5 text-left py-2.5 px-3 rounded-xl border-2 transition-all duration-150 ${btnState}">
+            <div class="w-4 h-4 mt-0.5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${checkboxState}">
+              ${iconHtml}
+            </div>
+            <span class="text-[13px] font-medium leading-snug">${el.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderPreview() {
+      let styleTheme;
+      
+      // 處理預覽畫面的色彩邏輯
+      if (selectedColor.id === 'default') {
+        styleTheme = selectedStyle.previewTheme;
+      } else if (selectedColor.id === 'custom') {
+        // 自定義色彩動態產生 Tailwind Class (使用 Arbitrary values)
+        const c = customColors;
+        styleTheme = {
+          accent: `bg-[${c[0]}]`,
+          bg: c.length > 1 ? `bg-[${c[1]}]` : 'bg-[#f8fafc]',
+          text: c.length > 2 ? `text-[${c[2]}]` : 'text-[#1e293b]',
+          card: c.length > 3 ? `bg-[${c[3]}] rounded-xl shadow-sm border border-white/50` : 'bg-white/90 rounded-xl shadow-sm border border-slate-200 backdrop-blur-sm'
+        };
+      } else {
+        styleTheme = selectedColor.previewTheme;
+      }
+
+      const layoutId = selectedLayout.id;
+      let innerHtml = '';
+
+      if (layoutId === 'split') {
+        innerHtml = `
+          <div class="flex w-full h-full gap-4">
+            <div class="w-1/2 h-full ${styleTheme.accent} opacity-20 rounded-xl flex items-center justify-center">
+               <i data-lucide="image" class="${styleTheme.text} w-10 h-10" style="opacity: 0.5;"></i>
+            </div>
+            <div class="w-1/2 flex flex-col justify-center gap-2.5">
+              <div class="h-5 w-3/4 ${styleTheme.accent} rounded-md opacity-80"></div>
+              <div class="h-2 w-full ${styleTheme.accent} rounded-md opacity-30"></div>
+              <div class="h-2 w-5/6 ${styleTheme.accent} rounded-md opacity-30"></div>
+              <div class="h-2 w-4/6 ${styleTheme.accent} rounded-md opacity-30 mt-1"></div>
+              <div class="h-6 w-20 ${styleTheme.accent} rounded-full mt-2"></div>
+            </div>
+          </div>
+        `;
+      } else if (layoutId === 'hero') {
+        innerHtml = `
+          <div class="w-full h-full relative flex items-center justify-center rounded-xl overflow-hidden border border-black/5 shadow-inner">
+            <div class="absolute inset-0 ${styleTheme.accent} opacity-30 flex items-center justify-center">
+               <i data-lucide="image" class="${styleTheme.text} w-14 h-14" style="opacity: 0.3;"></i>
+            </div>
+            <div class="relative z-10 bg-white/80 backdrop-blur-sm p-4 rounded-xl flex flex-col items-center gap-2 text-center border border-white max-w-[80%] shadow-lg">
+              <div class="h-6 w-36 ${styleTheme.accent} rounded-md opacity-90"></div>
+              <div class="h-2 w-48 ${styleTheme.accent} rounded-md opacity-50"></div>
+              <div class="h-8 w-24 ${styleTheme.accent} rounded-full mt-1"></div>
+            </div>
+          </div>
+        `;
+      } else if (layoutId === 'grid') {
+        const cardsHtml = [1, 2, 3, 4].map(i => `
+          <div class="${styleTheme.card} flex flex-col items-center justify-center gap-1.5 p-2">
+            <div class="w-8 h-8 rounded-full ${styleTheme.accent} opacity-20 flex items-center justify-center mb-1">
+               <div class="w-3 h-3 rounded-sm ${styleTheme.accent} opacity-80"></div>
+            </div>
+            <div class="h-2 w-3/4 ${styleTheme.accent} rounded-md opacity-70"></div>
+            <div class="h-1.5 w-full ${styleTheme.accent} rounded-md opacity-30"></div>
+          </div>
+        `).join('');
+        innerHtml = `
+          <div class="w-full h-full flex flex-col gap-3">
+            <div class="h-5 w-1/3 mx-auto ${styleTheme.accent} rounded-md opacity-80 mb-1"></div>
+            <div class="grid grid-cols-2 gap-3 flex-grow">${cardsHtml}</div>
+          </div>
+        `;
+      } else if (layoutId === 'feature') {
+        const rowsHtml = [1, 2, 3].map(i => `
+          <div class="${styleTheme.card} flex items-center gap-3 p-2.5">
+            <div class="w-10 h-10 rounded-lg ${styleTheme.accent} opacity-20 flex-shrink-0"></div>
+            <div class="flex-grow flex flex-col gap-1.5">
+              <div class="h-3 w-1/3 ${styleTheme.accent} rounded-md opacity-80"></div>
+              <div class="h-1.5 w-full ${styleTheme.accent} rounded-md opacity-30"></div>
+            </div>
+          </div>
+        `).join('');
+        innerHtml = `
+          <div class="w-full h-full flex flex-col gap-4">
+            <div class="h-6 w-1/2 ${styleTheme.accent} rounded-md opacity-80"></div>
+            <div class="flex-grow flex flex-col gap-2.5">${rowsHtml}</div>
+          </div>
+        `;
+      } else if (layoutId === 'bento') {
+        innerHtml = `
+          <div class="w-full h-full grid grid-cols-3 grid-rows-2 gap-2">
+            <div class="col-span-2 row-span-2 ${styleTheme.card} p-3 flex flex-col justify-end relative overflow-hidden">
+              <div class="absolute inset-0 ${styleTheme.accent} opacity-10"></div>
+              <div class="h-3 w-1/2 ${styleTheme.accent} rounded-md opacity-80 mb-2 relative z-10"></div>
+              <div class="h-1.5 w-3/4 ${styleTheme.accent} rounded-md opacity-40 relative z-10"></div>
+            </div>
+            <div class="${styleTheme.card} p-2 flex items-center justify-center">
+              <div class="w-6 h-6 rounded-full ${styleTheme.accent} opacity-30"></div>
+            </div>
+            <div class="${styleTheme.card} p-2 flex flex-col justify-center gap-1.5">
+              <div class="h-2 w-full ${styleTheme.accent} rounded-md opacity-50"></div>
+              <div class="h-1.5 w-2/3 ${styleTheme.accent} rounded-md opacity-30"></div>
+            </div>
+          </div>
+        `;
+      } else if (layoutId === 'timeline') {
+        innerHtml = `
+          <div class="w-full h-full flex items-center justify-center px-2">
+            <div class="flex items-center w-full gap-2 relative">
+              <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 ${styleTheme.accent} opacity-20 rounded-full"></div>
+              ${[1, 2, 3].map(i => `
+                <div class="flex-1 flex flex-col items-center gap-2 relative z-10">
+                  <div class="w-5 h-5 rounded-full ${styleTheme.accent} shadow-md border-2 border-white flex items-center justify-center"></div>
+                  <div class="${styleTheme.card} p-1.5 text-center w-full max-w-[70px]">
+                    <div class="h-1.5 w-full mx-auto ${styleTheme.accent} rounded-md opacity-80 mb-1"></div>
+                    <div class="h-1 w-3/4 mx-auto ${styleTheme.accent} rounded-md opacity-30"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      const boardHtml = `
+        <div class="w-full aspect-video ${styleTheme.bg} ${styleTheme.text} transition-all duration-500 overflow-hidden relative rounded-xl p-3 md:p-4 flex flex-col justify-center">
+          ${innerHtml}
+        </div>
+      `;
+      
+      document.getElementById('preview-wrapper').innerHTML = boardHtml;
+
+      // Update Label
+      let labelHtml = `<span class="font-medium text-slate-500">${selectedStyle.label}</span>`;
+      if (selectedColor.id !== 'default') {
+        labelHtml += ` + <span class="font-medium text-slate-500">${selectedColor.label}</span>`;
+      }
+      document.getElementById('preview-label').innerHTML = labelHtml;
+    }
+
+    function updatePrompt() {
+      let prompt = `【整體視覺氛圍 (Visual Aesthetic)】\n- 風格基調：${selectedStyle.label}\n- 設計核心：${selectedStyle.desc}\n`;
+
+      if (selectedColor.id === 'custom') {
+        prompt += `\n【色彩計畫 (Color Scheme)】\n- 色系名稱：自定義專屬色彩\n- 色彩細節：請嚴格使用以下色碼組合：${customColors.join(', ')}\n`;
+      } else if (selectedColor.id !== 'default') {
+        prompt += `\n【色彩計畫 (Color Scheme)】\n- 色系名稱：${selectedColor.label}\n- 色彩細節：${selectedColor.desc}\n`;
+      }
+
+      prompt += `\n【版面配置與結構 (Layout Structure)】\n請強制套用以下版面配置來生成畫面：\n- 排版類型：${selectedLayout.label}\n- 佈局細節：${selectedLayout.desc}\n\n【畫面細節與視覺元素 (Visual Elements & Decorators)】\n請在畫面中務必加入或遵循以下視覺特徵：\n`;
+
+      if (selectedElements.length > 0) {
+        selectedElements.forEach(el => {
+          prompt += `- ${el}\n`;
+        });
+      } else {
+        prompt += `- 保持畫面乾淨整潔即可。\n`;
+      }
+
+      document.getElementById('prompt-textarea').value = prompt;
+    }
+
+    // === 事件處理 ===
+    window.selectStyle = function(id) {
+      selectedStyle = VISUAL_STYLES.find(s => s.id === id);
+      updateAll();
+    };
+
+    window.selectColor = function(id) {
+      selectedColor = COLOR_SCHEMES.find(c => c.id === id);
+      updateAll();
+    };
+
+    window.selectLayout = function(id) {
+      selectedLayout = LAYOUTS.find(l => l.id === id);
+      updateAll();
+    };
+
+    window.toggleElement = function(label) {
+      if (selectedElements.includes(label)) {
+        selectedElements = selectedElements.filter(e => e !== label);
+      } else {
+        selectedElements.push(label);
+      }
+      updateAll();
+    };
+
+    // 自定義色彩操作
+    window.addCustomColor = function() {
+      if (customColors.length < 6) {
+        customColors.push('#cccccc'); // 預設新增灰色
+        updateAll();
+      }
+    };
+
+    window.removeCustomColor = function(index) {
+      if (customColors.length > 1) {
+        customColors.splice(index, 1);
+        updateAll();
+      }
+    };
+
+    window.updateCustomColor = function(index, value) {
+      customColors[index] = value;
+      updateAll();
+    };
+
+    window.copyPrompt = async function() {
+      const text = document.getElementById('prompt-textarea').value;
+      const btn = document.getElementById('copy-btn');
+      const textSpan = document.getElementById('copy-text');
+      const icon = document.getElementById('copy-icon');
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        // Fallback
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      // UI Feedback
+      btn.classList.replace('bg-blue-600', 'bg-green-500');
+      textSpan.innerText = '成功';
+      icon.setAttribute('data-lucide', 'check');
+      lucide.createIcons();
+
+      setTimeout(() => {
+        btn.classList.replace('bg-green-500', 'bg-blue-600');
+        textSpan.innerText = '複製';
+        icon.setAttribute('data-lucide', 'clipboard');
+        lucide.createIcons();
+      }, 2000);
+    };
+
+    // === 初始化 ===
+    function updateAll() {
+      renderStyles();
+      renderColors();
+      renderLayouts();
+      renderElements();
+      renderPreview();
+      updatePrompt();
+      lucide.createIcons(); // 重新渲染剛產生的 Icon
+    }
+
+    // 啟動應用程式
+    document.addEventListener('DOMContentLoaded', updateAll);
+
+  </script>
+</body>
+</html>
